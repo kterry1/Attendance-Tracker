@@ -1,0 +1,13 @@
+-- CreateTable
+CREATE TABLE "UserRole" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "role" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
+    CONSTRAINT "UserRole_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" TEXT NOT NULL
+);

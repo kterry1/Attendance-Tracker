@@ -15,5 +15,5 @@ type User {
   "The user's name"
   name: String!
   "A list of roles for the user (e.g. student, instructor, admin)"
-  role: [Role!]!
+  roles: [Role!]!
 }
