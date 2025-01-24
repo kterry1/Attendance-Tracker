@@ -18,6 +18,8 @@ model UserRole {
   role   Role
   user   User @relation(fields: [userId], references: [id])
   userId Int
+
+  @@unique([userId, role]) // Ensure a user can't have the same role twice
 }
 
 model User {

@@ -34,7 +34,7 @@ export type User = {
   /** The user's name */
   name: Scalars['String']['output'];
   /** A list of roles for the user (e.g. student, instructor, admin) */
-  role: Array<Role>;
+  roles: Array<Role>;
 };
 
 
@@ -132,7 +132,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  role?: Resolver<Array<ResolversTypes['Role']>, ParentType, ContextType>;
+  roles?: Resolver<Array<ResolversTypes['Role']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
