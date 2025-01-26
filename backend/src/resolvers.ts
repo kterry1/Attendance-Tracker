@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { Resolvers, User, Role } from "./generated-types";
-import { GraphQLScalarType, Kind } from "graphql";
+import { PrismaClient } from '@prisma/client';
+import { Resolvers, User, Role } from './generated-types';
+import { GraphQLScalarType, Kind } from 'graphql';
 
 type UserRole = {
   id: number;
@@ -11,8 +11,8 @@ type UserRole = {
 
 export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
   Date: new GraphQLScalarType({
-    name: "Date",
-    description: "Date custom scalar type",
+    name: 'Date',
+    description: 'Date custom scalar type',
     parseValue(value) {
       return new Date(value as Date); // value from the client
     },
@@ -48,7 +48,7 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
     createUser: async (
       parent,
       { name, roles }: { name: string; roles: Role[] },
-      context,
+      context
     ) => {
       const user = await context.prisma.user.create({
         data: { name },
@@ -66,7 +66,7 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
               },
             },
           });
-        }),
+        })
       );
 
       const createdUser = await context.prisma.user.findUnique({
