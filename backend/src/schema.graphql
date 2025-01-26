@@ -1,3 +1,5 @@
+scalar Date
+
 enum Role {
   STUDENT
   INSTRUCTOR
@@ -9,6 +11,11 @@ type Query {
   users: [User!]!
 }
 
+type Mutation {
+  "Create a new user"
+  createUser(name: String!, roles: [Role!]!): User!
+}
+
 type User {
   "The user's ID"
   id: ID!
@@ -16,4 +23,8 @@ type User {
   name: String!
   "A list of roles for the user (e.g. student, instructor, admin)"
   roles: [Role!]!
+  "Created at timestamp"
+  createdAt: Date!
+  "Updated at timestamp"
+  updatedAt: Date!
 }
