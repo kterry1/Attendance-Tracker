@@ -48,7 +48,7 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
     createUser: async (
       parent,
       { name, roles }: { name: string; roles: Role[] },
-      context
+      context,
     ) => {
       const user = await context.prisma.user.create({
         data: { name },
@@ -66,7 +66,7 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
               },
             },
           });
-        })
+        }),
       );
 
       const createdUser = await context.prisma.user.findUnique({

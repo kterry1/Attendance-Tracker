@@ -1,6 +1,6 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { PrismaClient, PrismaPromise } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { readFileSync } from "fs";
 import path from "path";
 import { gql } from "graphql-tag";
@@ -8,7 +8,9 @@ import { gql } from "graphql-tag";
 import { resolvers } from "./resolvers";
 
 const typeDefs = gql(
-  readFileSync(path.resolve(__dirname, "schema.graphql"), { encoding: "utf-8" })
+  readFileSync(path.resolve(__dirname, "schema.graphql"), {
+    encoding: "utf-8",
+  }),
 );
 
 const prisma = new PrismaClient({

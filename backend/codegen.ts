@@ -5,9 +5,6 @@ const config: CodegenConfig = {
   generates: {
     "./src/generated-types.ts": {
       plugins: ["typescript", "typescript-resolvers"],
-      //   config: {
-      //     // contextType: #TODO#
-      //   },
     },
   },
 };
