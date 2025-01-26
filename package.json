@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky install",
-    "lint": "eslint ./backend/src"
+    "format-and-lint": "prettier --write ./backend/src && eslint ./backend/src"
   },
   "keywords": [],
   "author": "",
