@@ -1,0 +1,11 @@
+# Check for conflict markers (specifically "<<<<<<< HEAD") in staged changes.
+if git diff --cached | grep -q '<<<<<<< HEAD'; then
+  echo "Error: Detected conflict marker '<<<<<<< HEAD' in staged changes."
+  echo "Please resolve merge conflicts before committing."
+  exit 1
+fi
+
+exit 0
+
+# Run linting and formatting checks
+pnpm run format-and-lint
