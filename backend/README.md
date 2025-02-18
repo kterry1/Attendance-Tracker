@@ -47,6 +47,21 @@ This is the backend service for the Attendance Tracker application. It provides 
    ```
 2. The Apollo Studio sandbox will be running on `http://localhost:4000`.
 
+### Redis
+
+There is a redis cache for handling rate limiting. To run Redis locally:
+
+1. Make sure you are in a separate terminal window
+2. While in the backend directory, run:
+   ```sh
+   brew services start redis
+   ```
+3. To confirm it's working, run:
+   ```sh
+   redis-cli ping
+   ```
+   If successful, the terminal should respond with `PONG`
+
 ## Codegen
 
 _TODO_
