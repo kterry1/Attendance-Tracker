@@ -6,6 +6,7 @@ import path from 'path';
 import { gql } from 'graphql-tag';
 
 import { resolvers } from './resolvers';
+import { rateLimit } from './redis/rate-limit';
 
 const typeDefs = gql(
   readFileSync(path.resolve(__dirname, 'schema.graphql'), {
@@ -28,7 +29,14 @@ async function startApolloServers() {
   });
 
   const { url } = await startStandaloneServer(server, {
-    context: async () => {
+    context: async ({ req }) => {
+      const ip =
+        req.headers['x-forwarded-for'] ||
+        req.socket.remoteAddress ||
+        'unknown-ip';
+
+      // Apply rate limiting (100 requests per minute per IP)
+      await rateLimit(ip as string, 100, 60);
       return {
         prisma,
       };
