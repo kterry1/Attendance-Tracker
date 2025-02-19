@@ -1,22 +1,35 @@
 # Get the name of this script
 script_name=$(basename "$0")
 
-# Get the list of staged files
-staged_files=$(git diff --cached --name-only)
+# Function to check for merge conflict markers
+check_conflicts() {
+  local staged_files
+  staged_files=$(git diff --cached --name-only)
 
-# If this script is staged, skip the conflict check
-if echo "$staged_files" | grep -q "$script_name"; then
-  echo "Warning: Skipping conflict check because this script is being modified."
-else
-  # Check for conflict markers (<<<<<<< HEAD) in staged files, excluding this script
+  # If this script is staged, skip the conflict check
+  if echo "$staged_files" | grep -q "$script_name"; then
+    echo "Warning: Skipping conflict check because this script is being modified."
+    return 0
+  fi
+
+  # Check for conflict markers (<<<<<<< HEAD) in staged files
   if echo "$staged_files" | xargs git diff --cached -- | grep -q '<<<<<<< HEAD'; then
     echo "Error: Detected conflict marker '<<<<<<< HEAD' in staged changes."
     echo "Please resolve merge conflicts before committing."
     exit 1
   fi
-fi
+}
+
+# Run conflict check before formatting
+check_conflicts
 
 # Run linting and formatting checks
 pnpm run format-and-lint
+
+# Stage any changes made by the formatter/linter
+git add .
+
+# Run conflict check again after formatting (in case new conflicts appear)
+check_conflicts
 
 exit 0  # Ensure successful exit if everything passes
