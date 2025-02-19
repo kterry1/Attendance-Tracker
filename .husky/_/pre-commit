@@ -5,7 +5,7 @@ if git diff --cached | grep -q '<<<<<<< HEAD'; then
   exit 1
 fi
 
-exit 0
-
 # Run linting and formatting checks
 pnpm run format-and-lint
+
+exit 0
