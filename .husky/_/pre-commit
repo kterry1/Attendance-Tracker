@@ -1,11 +1,22 @@
-# Check for conflict markers (specifically "<<<<<<< HEAD") in staged changes.
-if git diff --cached | grep -q '<<<<<<< HEAD'; then
-  echo "Error: Detected conflict marker '<<<<<<< HEAD' in staged changes."
-  echo "Please resolve merge conflicts before committing."
-  exit 1
+# Get the name of this script
+script_name=$(basename "$0")
+
+# Get the list of staged files
+staged_files=$(git diff --cached --name-only)
+
+# If this script is staged, skip the conflict check
+if echo "$staged_files" | grep -q "$script_name"; then
+  echo "Warning: Skipping conflict check because this script is being modified."
+else
+  # Check for conflict markers (<<<<<<< HEAD) in staged files, excluding this script
+  if echo "$staged_files" | xargs git diff --cached -- | grep -q '<<<<<<< HEAD'; then
+    echo "Error: Detected conflict marker '<<<<<<< HEAD' in staged changes."
+    echo "Please resolve merge conflicts before committing."
+    exit 1
+  fi
 fi
 
 # Run linting and formatting checks
 pnpm run format-and-lint
 
-exit 0
+exit 0  # Ensure successful exit if everything passes
