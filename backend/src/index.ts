@@ -4,9 +4,12 @@ import { PrismaClient } from '@prisma/client';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { gql } from 'graphql-tag';
+import jwt from 'jsonwebtoken';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 
 import { resolvers } from './resolvers';
 import { rateLimit } from './redis/rate-limit';
+import authDirectiveTransformer from './authentication-directive';
 
 const typeDefs = gql(
   readFileSync(path.resolve(__dirname, 'schema.graphql'), {
@@ -23,9 +26,14 @@ const prisma = new PrismaClient({
 });
 
 async function startApolloServers() {
+  // Create the executable schema with typeDefs and resolvers
+  let schema = makeExecutableSchema({ typeDefs, resolvers });
+
+  // Apply the auth directive transformer
+  schema = authDirectiveTransformer(schema, 'auth');
+
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
+    schema, // Use the transformed schema with @auth functionality
   });
 
   const { url } = await startStandaloneServer(server, {
@@ -37,8 +45,21 @@ async function startApolloServers() {
 
       // Apply rate limiting (100 requests per minute per IP)
       await rateLimit(ip as string, 100, 60);
+
+      let user = null;
+      const token = req.headers.authorization || '';
+
+      try {
+        if (token) {
+          user = jwt.verify(token, process.env.JWT_SECRET as string);
+        }
+      } catch (error) {
+        console.error('Error verifying token:', error);
+      }
+
       return {
-        prisma,
+        prisma, // ORM client
+        user, // User is added to the context for @auth directive
       };
     },
   });

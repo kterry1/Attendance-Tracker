@@ -1,7 +1,9 @@
-import { PrismaClient } from '@prisma/client';
-import { Resolvers, User, Role } from './generated-types';
 import { GraphQLScalarType, Kind } from 'graphql';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
+import { Resolvers, User, Role } from './generated-types';
 type UserRole = {
   id: number;
   role: Role;
@@ -35,11 +37,9 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
       });
       return users.map((user) => {
         return {
+          ...user,
           id: user.id.toString(),
-          name: user.name,
           roles: user.roles.map((role: UserRole) => role.role),
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
         };
       });
     },
@@ -47,11 +47,22 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
   Mutation: {
     createUser: async (
       parent,
-      { name, roles }: { name: string; roles: Role[] },
+      {
+        name,
+        password,
+        roles,
+      }: { name: string; password: string; roles: Role[] },
       context
     ) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
       const user = await context.prisma.user.create({
-        data: { name },
+        data: {
+          name,
+          password: hashedPassword,
+          roles: {
+            create: roles.map((role) => ({ role })),
+          },
+        },
       });
 
       await Promise.all(
@@ -85,6 +96,39 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
         ...createdUser,
         id: createdUser.id.toString(),
         roles: createdUser.roles.map((role: UserRole) => role.role),
+      };
+    },
+    login: async (
+      parent,
+      { username, password }: { username: string; password: string },
+      context
+    ) => {
+      const user = await context.prisma.user.findUnique({
+        where: {
+          name: username,
+        } as { name: string },
+        select: {
+          id: true,
+          password: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+      const validatedPassword = await bcrypt.compare(password, user.password);
+      if (!validatedPassword) {
+        throw new Error('Invalid credentials');
+      }
+
+      // Create a JWT token. The payload includes user id
+      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+        expiresIn: '1h',
+      });
+
+      // Return the token with encoded user id
+      return {
+        token,
       };
     },
   },

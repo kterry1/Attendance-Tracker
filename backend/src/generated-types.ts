@@ -36,19 +36,35 @@ export type Scalars = {
   Date: { input: any; output: any };
 };
 
+export type LoginResponse = {
+  __typename?: 'LoginResponse';
+  /** JWT token for authentication */
+  token: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /** Create a new user */
   createUser: User;
+  /** Login a user */
+  login: LoginResponse;
 };
 
 export type MutationCreateUserArgs = {
   name: Scalars['String']['input'];
+  password: Scalars['String']['input'];
   roles: Array<Role>;
+};
+
+export type MutationLoginArgs = {
+  password: Scalars['String']['input'];
+  username: Scalars['String']['input'];
 };
 
 export type Query = {
   __typename?: 'Query';
+  /** Current logged-in user */
+  me?: Maybe<User>;
   /** A list of users */
   users: Array<User>;
 };
@@ -183,6 +199,7 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   Role: Role;
@@ -195,16 +212,37 @@ export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   Date: Scalars['Date']['output'];
   ID: Scalars['ID']['output'];
+  LoginResponse: LoginResponse;
   Mutation: {};
   Query: {};
   String: Scalars['String']['output'];
   User: User;
 };
 
+export type AuthDirectiveArgs = {
+  roles: Array<Role>;
+};
+
+export type AuthDirectiveResolver<
+  Result,
+  Parent,
+  ContextType = any,
+  Args = AuthDirectiveArgs,
+> = DirectiveResolverFn<Result, Parent, ContextType, Args>;
+
 export interface DateScalarConfig
   extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
   name: 'Date';
 }
+
+export type LoginResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['LoginResponse'] = ResolversParentTypes['LoginResponse'],
+> = {
+  token?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
 
 export type MutationResolvers<
   ContextType = any,
@@ -215,7 +253,13 @@ export type MutationResolvers<
     ResolversTypes['User'],
     ParentType,
     ContextType,
-    RequireFields<MutationCreateUserArgs, 'name' | 'roles'>
+    RequireFields<MutationCreateUserArgs, 'name' | 'password' | 'roles'>
+  >;
+  login?: Resolver<
+    ResolversTypes['LoginResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<MutationLoginArgs, 'password' | 'username'>
   >;
 };
 
@@ -224,6 +268,7 @@ export type QueryResolvers<
   ParentType extends
     ResolversParentTypes['Query'] = ResolversParentTypes['Query'],
 > = {
+  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
 };
 
@@ -242,7 +287,12 @@ export type UserResolvers<
 
 export type Resolvers<ContextType = any> = {
   Date?: GraphQLScalarType;
+  LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
+};
+
+export type DirectiveResolvers<ContextType = any> = {
+  auth?: AuthDirectiveResolver<any, any, ContextType>;
 };
