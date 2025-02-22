@@ -12,7 +12,7 @@ type Query {
   "A list of users"
   users: [User!]! @auth(roles: [ADMIN])
   "Current logged-in user"
-  me: User @auth
+  me: User
 }
 
 type Mutation {

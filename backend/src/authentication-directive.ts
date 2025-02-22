@@ -1,7 +1,7 @@
 import { mapSchema, getDirective, MapperKind } from '@graphql-tools/utils';
 import { defaultFieldResolver, GraphQLError } from 'graphql';
 
-const authDirectiveTransformer = (schema, directiveName) => {
+const authDirectiveTransformer = (schema: any, directiveName: any) => {
   return mapSchema(schema, {
     [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
       // Get the @auth directive applied to this field.
@@ -26,7 +26,8 @@ const authDirectiveTransformer = (schema, directiveName) => {
           // If roles are specified, ensure the user has at least one required role.
           if (requiredRoles && requiredRoles.length > 0) {
             const userRoles = context.user.roles || [];
-            const hasRequiredRole = requiredRoles.some((role) =>
+
+            const hasRequiredRole = requiredRoles.some((role: any) =>
               userRoles.includes(role)
             );
             if (!hasRequiredRole) {

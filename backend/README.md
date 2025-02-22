@@ -16,6 +16,7 @@ This is the backend service for the Attendance Tracker application. It provides 
 - GraphQL
 - Apollo Server
 - Prisma(ORM)
+- Redis
 - Codegen
 - TypeScript
 

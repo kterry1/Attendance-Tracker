@@ -55,30 +55,16 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
       context
     ) => {
       const hashedPassword = await bcrypt.hash(password, 10);
+      const uniqueRoles = [...new Set(roles)];
       const user = await context.prisma.user.create({
         data: {
           name,
           password: hashedPassword,
           roles: {
-            create: roles.map((role) => ({ role })),
+            create: uniqueRoles.map((role) => ({ role })),
           },
         },
       });
-
-      await Promise.all(
-        roles.map(async (role) => {
-          await context.prisma.userRole.create({
-            data: {
-              role: role,
-              user: {
-                connect: {
-                  id: user.id,
-                },
-              },
-            },
-          });
-        })
-      );
 
       const createdUser = await context.prisma.user.findUnique({
         where: {
@@ -95,6 +81,7 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
       return {
         ...createdUser,
         id: createdUser.id.toString(),
+        // This mapping of roles is getting duplicated quite a bit
         roles: createdUser.roles.map((role: UserRole) => role.role),
       };
     },
@@ -110,6 +97,7 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
         select: {
           id: true,
           password: true,
+          roles: true,
         },
       });
 
@@ -117,14 +105,19 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
         throw new Error('User not found');
       }
       const validatedPassword = await bcrypt.compare(password, user.password);
+
       if (!validatedPassword) {
         throw new Error('Invalid credentials');
       }
 
       // Create a JWT token. The payload includes user id
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
-        expiresIn: '1h',
-      });
+      const token = jwt.sign(
+        { id: user.id, roles: user.roles.map((role: UserRole) => role.role) },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '1h',
+        }
+      );
 
       // Return the token with encoded user id
       return {
