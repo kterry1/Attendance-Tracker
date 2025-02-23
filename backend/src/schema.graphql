@@ -1,3 +1,5 @@
+directive @auth(roles: [Role!]!) on FIELD_DEFINITION
+
 scalar Date
 
 enum Role {
@@ -8,12 +10,17 @@ enum Role {
 
 type Query {
   "A list of users"
-  users: [User!]!
+  users: [User!]! @auth(roles: [ADMIN])
+  "Current logged-in user - requires authentication"
+  me: User!
 }
 
 type Mutation {
   "Create a new user"
-  createUser(name: String!, roles: [Role!]!): User!
+  createUser(name: String!, password: String!, roles: [Role!]!): User!
+    @auth(roles: [ADMIN])
+  "Login a user"
+  login(username: String!, password: String!): LoginResponse!
 }
 
 type User {
@@ -27,4 +34,9 @@ type User {
   createdAt: Date!
   "Updated at timestamp"
   updatedAt: Date!
+}
+
+type LoginResponse {
+  "JWT token for authentication"
+  token: String!
 }

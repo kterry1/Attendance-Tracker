@@ -1,7 +1,9 @@
-import { PrismaClient } from '@prisma/client';
-import { Resolvers, User, Role } from './generated-types';
 import { GraphQLScalarType, Kind } from 'graphql';
+import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
+import { Resolvers, User, Role } from './generated-types';
 type UserRole = {
   id: number;
   role: Role;
@@ -9,7 +11,17 @@ type UserRole = {
   userId: number;
 };
 
-export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
+type validatedUser = {
+  id: number;
+  roles: Role[];
+};
+
+export const resolvers: Resolvers<{
+  prisma: PrismaClient;
+  validatedUser: validatedUser;
+  res: any;
+  req: any;
+}> = {
   Date: new GraphQLScalarType({
     name: 'Date',
     description: 'Date custom scalar type',
@@ -35,39 +47,53 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
       });
       return users.map((user) => {
         return {
+          ...user,
           id: user.id.toString(),
-          name: user.name,
           roles: user.roles.map((role: UserRole) => role.role),
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
         };
       });
+    },
+    me: async (parent, args, context) => {
+      if (!context.validatedUser) {
+        throw new Error('You are not authenticated');
+      }
+
+      const user = await context.prisma.user.findUnique({
+        where: {
+          id: context.validatedUser.id,
+        },
+        include: {
+          roles: true,
+        },
+      });
+      return {
+        ...user,
+        id: user.id.toString(),
+        roles: user.roles.map((role: UserRole) => role.role),
+      };
     },
   },
   Mutation: {
     createUser: async (
       parent,
-      { name, roles }: { name: string; roles: Role[] },
+      {
+        name,
+        password,
+        roles,
+      }: { name: string; password: string; roles: Role[] },
       context
     ) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const uniqueRoles = [...new Set(roles)];
       const user = await context.prisma.user.create({
-        data: { name },
+        data: {
+          name,
+          password: hashedPassword,
+          roles: {
+            create: uniqueRoles.map((role) => ({ role })),
+          },
+        },
       });
-
-      await Promise.all(
-        roles.map(async (role) => {
-          await context.prisma.userRole.create({
-            data: {
-              role: role,
-              user: {
-                connect: {
-                  id: user.id,
-                },
-              },
-            },
-          });
-        })
-      );
 
       const createdUser = await context.prisma.user.findUnique({
         where: {
@@ -84,7 +110,55 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
       return {
         ...createdUser,
         id: createdUser.id.toString(),
+        // This mapping of roles is getting duplicated quite a bit
         roles: createdUser.roles.map((role: UserRole) => role.role),
+      };
+    },
+    login: async (
+      parent,
+      { username, password }: { username: string; password: string },
+      context
+    ) => {
+      const user = await context.prisma.user.findUnique({
+        where: {
+          name: username,
+        } as { name: string },
+        select: {
+          id: true,
+          password: true,
+          roles: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+      const validatedPassword = await bcrypt.compare(password, user.password);
+
+      if (!validatedPassword) {
+        throw new Error('Invalid credentials');
+      }
+
+      // Create a JWT token. The payload includes user id
+      const token = jwt.sign(
+        { id: user.id, roles: user.roles.map((role: UserRole) => role.role) },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: '1h',
+        }
+      );
+
+      // Set the token in a cookie
+      context.res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // secure in production
+        sameSite: 'lax',
+        maxAge: 3600000, // 1 hour in milliseconds
+      });
+
+      // Return the token with encoded user id
+      return {
+        token,
       };
     },
   },
