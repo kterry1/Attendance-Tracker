@@ -11,7 +11,17 @@ type UserRole = {
   userId: number;
 };
 
-export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
+type validatedUser = {
+  id: number;
+  roles: Role[];
+};
+
+export const resolvers: Resolvers<{
+  prisma: PrismaClient;
+  validatedUser: validatedUser;
+  res: any;
+  req: any;
+}> = {
   Date: new GraphQLScalarType({
     name: 'Date',
     description: 'Date custom scalar type',
@@ -42,6 +52,25 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
           roles: user.roles.map((role: UserRole) => role.role),
         };
       });
+    },
+    me: async (parent, args, context) => {
+      if (!context.validatedUser) {
+        throw new Error('You are not authenticated');
+      }
+
+      const user = await context.prisma.user.findUnique({
+        where: {
+          id: context.validatedUser.id,
+        },
+        include: {
+          roles: true,
+        },
+      });
+      return {
+        ...user,
+        id: user.id.toString(),
+        roles: user.roles.map((role: UserRole) => role.role),
+      };
     },
   },
   Mutation: {
@@ -118,6 +147,14 @@ export const resolvers: Resolvers<{ prisma: PrismaClient }> = {
           expiresIn: '1h',
         }
       );
+
+      // Set the token in a cookie
+      context.res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // secure in production
+        sameSite: 'lax',
+        maxAge: 3600000, // 1 hour in milliseconds
+      });
 
       // Return the token with encoded user id
       return {

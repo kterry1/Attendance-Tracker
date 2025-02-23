@@ -63,8 +63,8 @@ export type MutationLoginArgs = {
 
 export type Query = {
   __typename?: 'Query';
-  /** Current logged-in user */
-  me?: Maybe<User>;
+  /** Current logged-in user - requires authentication */
+  me: User;
   /** A list of users */
   users: Array<User>;
 };
@@ -268,7 +268,7 @@ export type QueryResolvers<
   ParentType extends
     ResolversParentTypes['Query'] = ResolversParentTypes['Query'],
 > = {
-  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  me?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
 };
 
