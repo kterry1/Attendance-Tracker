@@ -1,21 +1,25 @@
 # Get the name of this script
 script_name=$(basename "$0")
+# Define ANSI color variables
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+NC="\033[0m" # No Color
 
 # Function to check for merge conflict markers
 check_conflicts() {
   local staged_files
   staged_files=$(git diff --cached --name-only)
-
   # If this script is staged, skip the conflict check
   if echo "$staged_files" | grep -q "$script_name"; then
-    echo "Warning: Skipping conflict check because this script is being modified."
+    echo "${YELLOW}Warning: Skipping conflict check because pre-commit script is being modified.${NC}"
     return 0
   fi
 
   # Check for conflict markers (<<<<<<< HEAD) in staged files
   if echo "$staged_files" | xargs git diff --cached -- | grep -q '<<<<<<< HEAD'; then
-    echo "Error: Detected conflict marker '<<<<<<< HEAD' in staged changes."
-    echo "Please resolve merge conflicts before committing."
+    echo "${RED}Error: Detected conflict marker '<<<<<<< HEAD' in staged changes.${NC}"
+    echo "${GREEN}Please resolve merge conflicts before committing.${NC}"
     exit 1
   fi
 }
@@ -29,7 +33,22 @@ pnpm run format-and-lint
 # Stage any changes made by the formatter/linter
 git add .
 
-# Run conflict check again after formatting (in case new conflicts appear)
-check_conflicts
+staged_files=$(git diff --cached --name-only)
+
+# Check if schema.graphql is staged for commit
+if echo "$staged_files" | grep -q "schema.graphql"; then
+  echo  "${YELLOW}WARNING: Detected changes to schema.graphql.${NC}"
+  echo  "${GREEN}Please ensure you run 'pnpm run generate' to run codegen.${NC}"
+  # If you prefer to block the commit, uncomment the next line:
+  # exit 1
+fi
+
+# Check if schema.prisma is staged for commit
+if echo "$staged_files" | grep -q "schema.prisma"; then
+  echo  "${YELLOW}WARNING: Detected changes to schema.prisma.${NC}"
+  echo  "${GREEN}Please check the Quick Reference section in the readme to ensure all commands have been run.${NC}"
+  # If you prefer to block the commit, uncomment the next line:
+  # exit 1
+fi
 
 exit 0  # Ensure successful exit if everything passes
