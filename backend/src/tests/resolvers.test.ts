@@ -1,15 +1,14 @@
 import { resolvers } from '../resolvers';
-import { GraphQLResolveInfo } from 'graphql';
 import { PrismaClient } from '@prisma/client';
+import { Role } from '../generated-types';
+
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
+};
 
 function getCallableResolver<TResult, TParent, TContext, TArgs>(
   resolver: any
-): (
-  parent: TParent,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => Promise<TResult> {
+): (parent: TParent, args: TArgs, context: TContext) => Promise<TResult> {
   if (typeof resolver === 'function') {
     return resolver;
   } else if (resolver && typeof resolver.resolve === 'function') {
@@ -21,6 +20,12 @@ function getCallableResolver<TResult, TParent, TContext, TArgs>(
 describe('resolvers', () => {
   describe('users', () => {
     it('should return users with roles', async () => {
+      type TMockPrisma = {
+        prisma: DeepPartial<PrismaClient>;
+        validatedUser: { id: number; roles: Array<Role> };
+        res: any;
+        req: any;
+      };
       // Create a partial mock for PrismaClient. You only need to implement what your test uses.
       const mockPrisma = {
         user: {
@@ -40,27 +45,17 @@ describe('resolvers', () => {
       };
 
       // Cast the mock to the expected PrismaClient type.
-      const mockContext = {
+      const mockContext: TMockPrisma = {
         prisma: mockPrisma,
-        validatedUser: { id: 1, roles: ['ADMIN'] },
-        res: null as any,
-        req: null as any,
-      } as unknown as {
-        prisma: PrismaClient;
-        validatedUser: any;
-        res: any;
-        req: any;
+        validatedUser: { id: 1, roles: [Role.Admin] },
+        res: null,
+        req: null,
       };
 
       // Get the callable users resolver
       const usersResolver = getCallableResolver(resolvers.Query.users);
 
-      const result = await usersResolver(
-        null,
-        {},
-        mockContext,
-        {} as GraphQLResolveInfo
-      );
+      const result = await usersResolver(null, {}, mockContext);
       expect(result).toEqual([
         {
           id: '1',
