@@ -133,6 +133,7 @@ export const resolvers: Resolvers<{
       if (!user) {
         throw new Error('User not found');
       }
+
       const validatedPassword = await bcrypt.compare(password, user.password);
 
       if (!validatedPassword) {
