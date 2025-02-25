@@ -32,10 +32,10 @@ const hashedPassword =
 
 const mockPrisma = {
   $on: <V extends never>(
-    eventType: V,
+    eventType: V, // eslint-disable-line @typescript-eslint/no-unused-vars
     callback: (
       event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent
-    ) => void
+    ) => void // eslint-disable-line @typescript-eslint/no-unused-vars
   ): void => {},
   user: {
     findMany: jest.fn().mockResolvedValue([
