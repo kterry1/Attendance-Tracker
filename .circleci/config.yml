@@ -6,7 +6,9 @@ jobs:
       - image: cimg/node:18.17.1
     steps:
       - checkout
-      - run: npm install -g pnpm
+      - run:
+          name: Install pnpm
+          command: pnpm install
       - run:
           name: Install Dependencies
           command: cd backend && pnpm install
