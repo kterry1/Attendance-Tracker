@@ -2,17 +2,16 @@ version: 2.1
 
 jobs:
   build:
-    working_directory: ~/application-tracker/backend # Change to backend folder
     docker:
       - image: cimg/node:18.19.0
     steps:
       - checkout
       - run:
           name: Install Dependencies
-          command: pnpm install
+          command: cd backend && pnpm install
       - run:
           name: Run Tests
-          command: pnpm test
+          command: cd backend && pnpm test
 
 workflows:
   version: 2
