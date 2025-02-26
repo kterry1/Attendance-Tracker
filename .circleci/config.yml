@@ -2,8 +2,9 @@ version: 2.1
 
 jobs:
   build:
+    working_directory: ~/application-tracker/backend # Change to backend folder
     docker:
-      - image: cimg/node:18.19.0 # Use an appropriate image for your project
+      - image: cimg/node:18.19.0
     steps:
       - checkout
       - run:
