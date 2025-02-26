@@ -8,10 +8,10 @@ jobs:
       - checkout
       - run:
           name: Install Dependencies
-          command: npm install
+          command: pnpm install
       - run:
           name: Run Tests
-          command: npm test
+          command: pnpm test
 
 workflows:
   version: 2
