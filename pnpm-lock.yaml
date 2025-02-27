@@ -5,6 +5,7 @@ specifiers:
   '@typescript-eslint/parser': ^8.21.0
   eslint: ^9.19.0
   husky: ^9.1.7
+  pnpm: ^10.5.2
   prettier: ^3.4.2
   typescript: ^5.7.3
 
@@ -16,6 +17,7 @@ devDependencies:
   '@typescript-eslint/eslint-plugin': 8.21.0_ucy2uprspt7u7gbymxcoawo5se
   '@typescript-eslint/parser': 8.21.0_t2ivh2ae2tkac32movctuzz4nu
   husky: 9.1.7
+  pnpm: 10.5.2
   prettier: 3.4.2
 
 packages:
@@ -663,6 +665,12 @@ packages:
   /picomatch/2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+    dev: true
+
+  /pnpm/10.5.2:
+    resolution: {integrity: sha512-2p3CjNP/QNBZIYgjWrJdMgKt2KIHr77caCIg5KACn/v/RWIQK55uRrTj+ei9U+bQXeSFRLDFfUsBeeIsdtEZmw==}
+    engines: {node: '>=18.12'}
+    hasBin: true
     dev: true
 
   /prelude-ls/1.2.1:

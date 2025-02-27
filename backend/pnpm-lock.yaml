@@ -24,6 +24,7 @@ specifiers:
   jest: ^29.7.0
   jsonwebtoken: ^9.0.2
   nodemon: ^3.1.9
+  pnpm: ^10.5.2
   prisma: ^6.2.1
   sqlite3: ^5.1.7
   ts-jest: ^29.2.5
@@ -58,6 +59,7 @@ devDependencies:
   concurrently: 9.1.2
   jest: 29.7.0_fafnfgk6p73gnbsgh73or2krzi
   nodemon: 3.1.9
+  pnpm: 10.5.2
   prisma: 6.2.1
   ts-jest: 29.2.5_jdgq3jrouajlhmseltcfmhz5fe
   ts-node: 10.9.2_jz7g66zcxnytounk3ufizcpw2i
@@ -5662,6 +5664,12 @@ packages:
     engines: {node: '>=8'}
     dependencies:
       find-up: 4.1.0
+    dev: true
+
+  /pnpm/10.5.2:
+    resolution: {integrity: sha512-2p3CjNP/QNBZIYgjWrJdMgKt2KIHr77caCIg5KACn/v/RWIQK55uRrTj+ei9U+bQXeSFRLDFfUsBeeIsdtEZmw==}
+    engines: {node: '>=18.12'}
+    hasBin: true
     dev: true
 
   /prebuild-install/7.1.3:
