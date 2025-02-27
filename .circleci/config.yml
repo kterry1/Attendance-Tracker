@@ -1,0 +1,26 @@
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/node:18.19.0
+    steps:
+      - checkout
+      - run:
+          name: Check pnpm version
+          command: pnpm --version
+      - run:
+          name: Install root dependencies
+          command: pnpm install
+      - run:
+          name: Install backend dependencies
+          command: cd backend && pnpm install
+      - run:
+          name: Run Tests
+          command: cd backend && pnpm test
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
