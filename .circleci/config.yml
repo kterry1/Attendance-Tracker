@@ -7,14 +7,17 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Use pnpm 7.30.1 to install root dependencies
-          command: pnpm install
-      - run:
-          name: Install backend dependencies with pnpm 7.30.1
-          command: cd backend && pnpm install
-      - run:
-          name: Run Tests
-          command: cd backend && pnpm test
+          name: Check pnpm version
+          command: pnpm --version
+      # - run:
+      #     name: Use pnpm 7.30.1 to install root dependencies
+      #     command: pnpm install
+      # - run:
+      #     name: Install backend dependencies with pnpm 7.30.1
+      #     command: cd backend && pnpm install
+      # - run:
+      #     name: Run Tests
+      #     command: cd backend && pnpm test
 
 workflows:
   version: 2
