@@ -8,16 +8,16 @@ jobs:
       - checkout
       - run:
           name: Use pnpm 7.30.1 to install root dependencies
-          command: npx pnpm@7.30.1 install
+          command: pnpm install
       - run:
           name: Install backend dependencies with pnpm 7.30.1
-          command: cd backend && npx pnpm@7.30.1 install
+          command: cd backend && pnpm install
       - run:
           name: Run Tests
-          command: cd backend && npx pnpm@7.30.1 test
+          command: cd backend && pnpm test
 
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - build
+      - test
