@@ -1,9 +1,10 @@
-import { GraphQLScalarType, Kind } from 'graphql';
+import { GraphQLScalarType, Kind, GraphQLError } from 'graphql';
+import { ApolloServerErrorCode } from '@apollo/server/errors';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
-import { Resolvers, User, Role } from './generated-types';
+import { Resolvers, User, Role, LoginResponse } from './generated-types';
 type UserRole = {
   id: number;
   role: Role;
@@ -39,7 +40,7 @@ export const resolvers: Resolvers<{
     },
   }),
   Query: {
-    users: async (parent, args, context) => {
+    users: async (parent, args, context): Promise<User[]> => {
       const users = await context.prisma.user.findMany({
         include: {
           roles: true,
@@ -53,9 +54,11 @@ export const resolvers: Resolvers<{
         };
       });
     },
-    me: async (parent, args, context) => {
+    me: async (parent, args, context): Promise<User> => {
       if (!context.validatedUser) {
-        throw new Error('You are not authenticated');
+        throw new GraphQLError('You are not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
       }
 
       const user = await context.prisma.user.findUnique({
@@ -82,18 +85,28 @@ export const resolvers: Resolvers<{
         roles,
       }: { name: string; password: string; roles: Role[] },
       context
-    ) => {
+    ): Promise<User> => {
       const hashedPassword = await bcrypt.hash(password, 10);
       const uniqueRoles = [...new Set(roles)];
-      const user = await context.prisma.user.create({
-        data: {
-          name,
-          password: hashedPassword,
-          roles: {
-            create: uniqueRoles.map((role) => ({ role })),
+      let user;
+      try {
+        user = await context.prisma.user.create({
+          data: {
+            name,
+            password: hashedPassword,
+            roles: {
+              create: uniqueRoles.map((role) => ({ role })),
+            },
           },
-        },
-      });
+        });
+      } catch (error) {
+        if (error.code === 'P2002') {
+          throw new GraphQLError('User already exists', {
+            extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
+          });
+        }
+        throw error;
+      }
 
       const createdUser = await context.prisma.user.findUnique({
         where: {
@@ -118,7 +131,7 @@ export const resolvers: Resolvers<{
       parent,
       { username, password }: { username: string; password: string },
       context
-    ) => {
+    ): Promise<LoginResponse> => {
       const user = await context.prisma.user.findUnique({
         where: {
           name: username,
@@ -131,13 +144,17 @@ export const resolvers: Resolvers<{
       });
 
       if (!user) {
-        throw new Error('User not found');
+        throw new GraphQLError('User not found', {
+          extensions: { code: 'USER_NOT_FOUND' },
+        });
       }
 
       const validatedPassword = await bcrypt.compare(password, user.password);
 
       if (!validatedPassword) {
-        throw new Error('Invalid credentials');
+        throw new GraphQLError('Invalid credentials', {
+          extensions: { code: 'INVALID_CREDENTIALS' },
+        });
       }
 
       // Create a JWT token. The payload includes user id
