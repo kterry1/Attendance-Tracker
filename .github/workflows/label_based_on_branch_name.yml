@@ -1,0 +1,14 @@
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  add-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Adds Infrastucture label to PR
+        if: startsWith(github.event.pull_request.head.ref, 'infra/')
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: 'infrastucture'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
