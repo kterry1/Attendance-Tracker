@@ -9,6 +9,6 @@ jobs:
         if: startsWith(github.event.pull_request.head.ref, 'infra/')
         uses: actions-ecosystem/action-add-labels@v1
         with:
-          labels: 'infrastucture'
+          labels: 'infrastructure'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
