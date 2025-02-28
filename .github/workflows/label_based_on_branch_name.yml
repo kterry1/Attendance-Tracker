@@ -5,10 +5,42 @@ jobs:
   add-label:
     runs-on: ubuntu-latest
     steps:
-      - name: Adds Infrastucture label to PR
+      - name: Adds 'infrastucture' label to PR
         if: startsWith(github.event.pull_request.head.ref, 'infra/')
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: 'infrastructure'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Adds 'backend' label to PR
+        if: startsWith(github.event.pull_request.head.ref, 'backend/')
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: 'backend'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Adds 'frontend' label to PR
+        if: startsWith(github.event.pull_request.head.ref, 'frontend/')
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: 'frontend'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Adds 'task' label to PR
+        if: startsWith(split(github.event.pull_request.head.ref, '/')[1], 'task')
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: 'task'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Adds 'bugfix' label to PR
+        if: startsWith(split(github.event.pull_request.head.ref, '/')[1], 'bugfix')
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: 'bugfix'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
