@@ -44,10 +44,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Adds 'bugfix' label to PR
-      #   if: startsWith(split(github.event.pull_request.head.ref, '/')[1], 'bugfix')
-      #   uses: actions-ecosystem/action-add-labels@v1
-      #   with:
-      #     labels: 'bugfix'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Adds 'bugfix' label to PR
+        if: startsWith(steps.extract.outputs.segment, 'bugfix')
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: 'bugfix'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
