@@ -1,5 +1,9 @@
-#!/usr/bin/env sh
-. "$(dirname "$0")/h"
+# Define ANSI color variables
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+BLUE="\033[0;34m"
+NC="\033[0m" # No Color
 
 # Get the current branch name
 branch_name=$(git symbolic-ref --short HEAD)
@@ -11,9 +15,9 @@ echo "Checking branch name: $branch_name"
 pattern='^(infra|backend|frontend)/(task|bugfix)-[0-9]+-[a-z0-9._-]+$'
 
 if ! echo "$branch_name" | grep -Eq "$pattern"; then
-  echo "Error: Branch name '$branch_name' does not follow the required pattern."
-  echo "Please rename your branch to match one of the following pattern:"
-  echo "  <infra|backend|frontend>/<task|bugfix>-<ticket#>-description"
+  echo "${RED}Error: Branch name ${YELLOW}'$branch_name'${NC} ${RED}does not follow the required pattern.${NC}"
+  echo "${GREEN}Please rename your branch to match one of the following pattern:${NC}"
+  echo "${BLUE}<infra|backend|frontend>/<task|bugfix>-<ticket#>-description${NC}"
   exit 1
 fi
 
