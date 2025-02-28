@@ -29,18 +29,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract branch segment
+        id: extract
+        run: |
+          branch=${{ github.event.pull_request.head.ref }}
+          segment=$(echo "$branch" | cut -d '/' -f2)
+          echo "segment=$segment" >> $GITHUB_OUTPUT
+
       - name: Adds 'task' label to PR
-        if: startsWith(split(github.event.pull_request.head.ref, '/')[1], 'task')
+        if: startsWith(steps.extract.outputs.segment, 'task')
         uses: actions-ecosystem/action-add-labels@v1
         with:
           labels: 'task'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Adds 'bugfix' label to PR
-        if: startsWith(split(github.event.pull_request.head.ref, '/')[1], 'bugfix')
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: 'bugfix'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Adds 'bugfix' label to PR
+      #   if: startsWith(split(github.event.pull_request.head.ref, '/')[1], 'bugfix')
+      #   uses: actions-ecosystem/action-add-labels@v1
+      #   with:
+      #     labels: 'bugfix'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
