@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/h"
+
+# Get the current branch name
+branch_name=$(git symbolic-ref --short HEAD)
+echo "Checking branch name: $branch_name"
+
+# Define your allowed branch name pattern.
+# This example enforces that branch names start with feature/, bugfix/, hotfix/, or release/
+# followed by lowercase letters, numbers, underscores, hyphens, or dots.
+pattern='^(infra|backend|frontend)/(task|bugfix)-[0-9]+-[a-z0-9._-]+$'
+
+if ! echo "$branch_name" | grep -Eq "$pattern"; then
+  echo "Error: Branch name '$branch_name' does not follow the required pattern."
+  echo "Please rename your branch to match one of the following pattern:"
+  echo "  <infra|backend|frontend>/<task|bugfix>-<ticket#>-description"
+  exit 1
+fi
+
+echo "Branch name is valid."
