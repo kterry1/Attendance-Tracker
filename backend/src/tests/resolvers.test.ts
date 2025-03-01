@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { GraphQLResolveInfo } from 'graphql';
 import { resolvers } from '../resolvers';
 import { Role, Resolver } from '../generated-types';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 function getCallableResolver<TResult, TParent, TContext, TArgs>(
   resolver: Resolver<TResult, TParent, TContext, TArgs>
@@ -20,11 +21,12 @@ function getCallableResolver<TResult, TParent, TContext, TArgs>(
   throw new Error('Resolver is not callable');
 }
 
-type TMockContext = {
+type TMockContext = (custom?: any) => {
   prisma: PrismaClient;
   validatedUser: { id: number; roles: Array<Role> };
   res: any;
   req: Response;
+  custom: any;
 };
 
 const hashedPassword =
@@ -64,14 +66,15 @@ const mockPrisma = {
 } as unknown as PrismaClient;
 
 // Cast the mock to the expected PrismaClient type.
-const mockContext: TMockContext = {
+const mockContext: TMockContext = (custom) => ({
   prisma: mockPrisma,
   validatedUser: { id: 1, roles: [Role.Admin] },
   res: {
     cookie: jest.fn(),
   },
   req: null,
-};
+  ...custom,
+});
 
 describe('resolvers', () => {
   beforeAll(() => {
@@ -82,8 +85,7 @@ describe('resolvers', () => {
       it('should return users with roles', async () => {
         // Get the callable users resolver
         const usersResolver = getCallableResolver(resolvers.Query.users);
-
-        const result = await usersResolver(null, {}, mockContext);
+        const result = await usersResolver(null, {}, mockContext());
         expect(result).toEqual([
           {
             id: '1',
@@ -103,12 +105,23 @@ describe('resolvers', () => {
         // Get the callable me resolver
         const meResolver = getCallableResolver(resolvers.Query.me);
 
-        const result = await meResolver(null, {}, mockContext);
+        const result = await meResolver(null, {}, mockContext());
         expect(result).toEqual({
           id: '1',
           name: 'Greg Hirsch',
           roles: [Role.Admin],
         });
+      });
+      it('should fail to reutrn the authenticated user', async () => {
+        // Get the callable me resolver
+        const meResolver = getCallableResolver(resolvers.Query.me);
+
+        const result = meResolver(
+          null,
+          {},
+          mockContext({ validatedUser: null })
+        );
+        await expect(result).rejects.toThrow('You are not authenticated');
       });
     });
   });
@@ -123,7 +136,7 @@ describe('resolvers', () => {
         const result = await createUserResolver(
           null,
           { name: 'Greg Hirsch', password: 'password', roles: [Role.Admin] },
-          mockContext
+          mockContext()
         );
         expect(result).toEqual({
           id: '1',
@@ -131,24 +144,41 @@ describe('resolvers', () => {
           roles: [Role.Admin],
         });
       });
+      it('should throw an error if a user already exists', async () => {
+        (mockPrisma.user.create as jest.Mock).mockRejectedValueOnce(
+          new PrismaClientKnownRequestError('User already exists', {
+            code: 'P2002',
+            clientVersion: '2.0.0',
+          })
+        );
+        // Get the callable createUser resolver
+        const createUserResolver = getCallableResolver(
+          resolvers.Mutation.createUser
+        );
+
+        const result = createUserResolver(
+          null,
+          { name: 'Greg Hirsch', password: 'password', roles: [Role.Admin] },
+          mockContext()
+        );
+        expect(result).rejects.toThrow('User already exists');
+      });
     });
     describe('login', () => {
-      beforeAll(() => {
+      it('should return a token for the logged in user', async () => {
         (mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
           id: 1,
           name: 'Greg Hirsch',
           roles: [{ role: Role.Admin }],
           password: hashedPassword,
         });
-      });
-      it('should login a user', async () => {
         // Get the callable login resolver
         const loginResolver = getCallableResolver(resolvers.Mutation.login);
 
         const result = await loginResolver(
           null,
-          { username: 'Greg Hirsch', password: 'password' },
-          mockContext
+          { username: 'John', password: 'password' },
+          mockContext()
         );
         const signedToken = jwt.sign(
           { id: 1, roles: [Role.Admin] },
@@ -160,6 +190,35 @@ describe('resolvers', () => {
         expect(result).toEqual({
           token: signedToken,
         });
+      });
+      it('should throw an error if no user is found', async () => {
+        (mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
+        // Get the callable login resolver
+        const loginResolver = getCallableResolver(resolvers.Mutation.login);
+
+        const result = loginResolver(
+          null,
+          { username: 'John', password: 'password' },
+          mockContext()
+        );
+        await expect(result).rejects.toThrow('User not found');
+      });
+      it('should throw an error if password is incorrect', async () => {
+        (mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce({
+          id: 1,
+          name: 'Greg Hirsch',
+          roles: [{ role: Role.Admin }],
+          password: hashedPassword,
+        });
+        // Get the callable login resolver
+        const loginResolver = getCallableResolver(resolvers.Mutation.login);
+
+        const result = loginResolver(
+          null,
+          { username: 'Greg Hirsch', password: 'wrong_password' },
+          mockContext()
+        );
+        await expect(result).rejects.toThrow('Invalid credentials');
       });
     });
   });
