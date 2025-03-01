@@ -98,6 +98,13 @@ export const resolvers: Resolvers<{
               create: uniqueRoles.map((role) => ({ role })),
             },
           },
+          select: {
+            id: true,
+            name: true,
+            roles: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         });
       } catch (error) {
         if (error.code === 'P2002') {
@@ -107,24 +114,11 @@ export const resolvers: Resolvers<{
         }
         throw error;
       }
-
-      const createdUser = await context.prisma.user.findUnique({
-        where: {
-          id: user.id,
-        },
-        select: {
-          id: true,
-          name: true,
-          roles: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
       return {
-        ...createdUser,
-        id: createdUser.id.toString(),
+        ...user,
+        id: user.id.toString(),
         // This mapping of roles is getting duplicated quite a bit
-        roles: createdUser.roles.map((role: UserRole) => role.role),
+        roles: user.roles.map((role: UserRole) => role.role),
       };
     },
     login: async (
