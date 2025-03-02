@@ -1,0 +1,15 @@
+# top-most EditorConfig file
+root = true
+
+# Default settings for all files
+[*]
+indent_style = space
+indent_size = 2          # Matches Prettier's tabWidth setting
+end_of_line = lf         # Consistent with Prettier and other configs
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Specific overrides for Markdown files (optional)
+[*.md]
+trim_trailing_whitespace = false
