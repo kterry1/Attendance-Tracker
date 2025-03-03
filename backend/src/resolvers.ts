@@ -6,7 +6,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
 import { Resolvers, User, Role, LoginResponse } from './generated-types';
-import { NumericLiteral } from 'typescript';
 type UserRole = {
   id: number;
   role: Role;
@@ -134,7 +133,7 @@ export const resolvers: Resolvers<{
           // This mapping of roles is getting duplicated quite a bit
           roles: user.roles.map((role: UserRole) => role.role),
         };
-      } catch (error) {
+      } catch (_error) {
         throw new GraphQLError('Error creating user', {
           extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
         });
