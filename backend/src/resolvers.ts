@@ -133,10 +133,13 @@ export const resolvers: Resolvers<{
           // This mapping of roles is getting duplicated quite a bit
           roles: user.roles.map((role: UserRole) => role.role),
         };
-      } catch (_error) {
-        throw new GraphQLError('Error creating user', {
-          extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
-        });
+      } catch (error) {
+        if (error.code === 'P2002') {
+          throw new GraphQLError('Error creating user', {
+            extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
+          });
+        }
+        throw error;
       }
     },
     login: async (
