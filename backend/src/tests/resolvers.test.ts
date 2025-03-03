@@ -128,6 +128,7 @@ describe('resolvers', () => {
   describe('Mutation', () => {
     describe('createUser', () => {
       it('should create a user', async () => {
+        (mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
         // Get the callable createUser resolver
         const createUserResolver = getCallableResolver(
           resolvers.Mutation.createUser
@@ -135,7 +136,11 @@ describe('resolvers', () => {
 
         const result = await createUserResolver(
           null,
-          { name: 'Greg Hirsch', password: 'password', roles: [Role.Admin] },
+          {
+            name: 'Greg Hirsch',
+            password: 'this_13_A-pass_Crossword',
+            roles: [Role.Admin],
+          },
           mockContext()
         );
         expect(result).toEqual({
@@ -143,6 +148,26 @@ describe('resolvers', () => {
           name: 'Greg Hirsch',
           roles: [Role.Admin],
         });
+      });
+      it('should throw an error requiring a stronger password', async () => {
+        (mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
+        // Get the callable createUser resolver
+        const createUserResolver = getCallableResolver(
+          resolvers.Mutation.createUser
+        );
+
+        const result = createUserResolver(
+          null,
+          {
+            name: 'Greg Hirsch',
+            password: 'too_easy',
+            roles: [Role.Admin],
+          },
+          mockContext()
+        );
+        await expect(result).rejects.toThrow(
+          'Password too weak: Please choose a stronger password.'
+        );
       });
       it('should throw an error if a user already exists', async () => {
         (mockPrisma.user.create as jest.Mock).mockRejectedValueOnce(

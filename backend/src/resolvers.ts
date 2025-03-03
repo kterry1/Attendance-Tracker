@@ -1,6 +1,7 @@
 import { GraphQLScalarType, Kind, GraphQLError } from 'graphql';
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 import { PrismaClient } from '@prisma/client';
+import zxcvbn from 'zxcvbn';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
@@ -86,6 +87,26 @@ export const resolvers: Resolvers<{
       }: { name: string; password: string; roles: Role[] },
       context
     ): Promise<User> => {
+      const existingUser = await context.prisma.user.findUnique({
+        where: {
+          name: name,
+        } as { name: string },
+      });
+      if (existingUser) {
+        throw new GraphQLError('User already exists', {
+          extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
+        });
+      }
+
+      // Evaluate the password's strength using 'zxcvbn'
+      const { score, feedback } = zxcvbn(password);
+
+      // Enforce a minimum strength threshold (e.g., 3 out of 4)
+      if (score < 3) {
+        throw new Error(
+          `Password too weak: ${feedback.warning || 'Please choose a stronger password.'}`
+        );
+      }
       const hashedPassword = await bcrypt.hash(password, 10);
       const uniqueRoles = [...new Set(roles)];
       let user;
@@ -106,20 +127,20 @@ export const resolvers: Resolvers<{
             updatedAt: true,
           },
         });
+        return {
+          ...user,
+          id: user.id.toString(),
+          // This mapping of roles is getting duplicated quite a bit
+          roles: user.roles.map((role: UserRole) => role.role),
+        };
       } catch (error) {
         if (error.code === 'P2002') {
-          throw new GraphQLError('User already exists', {
-            extensions: { code: ApolloServerErrorCode.BAD_USER_INPUT },
+          throw new GraphQLError('Error creating user', {
+            extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
           });
         }
         throw error;
       }
-      return {
-        ...user,
-        id: user.id.toString(),
-        // This mapping of roles is getting duplicated quite a bit
-        roles: user.roles.map((role: UserRole) => role.role),
-      };
     },
     login: async (
       parent,
