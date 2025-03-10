@@ -9,7 +9,7 @@
     "compile": "tsc",
     "dev": "concurrently \"ts-node-dev --respawn --watch ./**/*.graphql ./src/index.ts\" \"pnpm run generate\"",
     "start": "npm run compile && nodemon ./dist/index.js",
-    "test": "jest",
+    "test": "NODE_ENV=test jest",
     "generate": "graphql-codegen --watch \"src/schema.graphql\""
   },
   "keywords": [],
@@ -22,12 +22,14 @@
     "@parcel/watcher": "^2.5.0",
     "@prisma/client": "^6.2.1",
     "bcrypt": "^5.1.1",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
     "ioredis": "^5.5.0",
     "jsonwebtoken": "^9.0.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "twilio": "^5.4.5"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

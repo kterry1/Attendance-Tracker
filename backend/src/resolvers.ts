@@ -4,7 +4,11 @@ import { PrismaClient } from '@prisma/client';
 import zxcvbn from 'zxcvbn';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-
+require('dotenv').config();
+import {
+  sendVerificationCode,
+  checkVerificationCode,
+} from './helper-functions';
 import { Resolvers, User, Role, LoginResponse } from './generated-types';
 type UserRole = {
   id: number;
@@ -127,6 +131,9 @@ export const resolvers: Resolvers<{
             updatedAt: true,
           },
         });
+
+        await sendVerificationCode(); // NOTE: currently only console.logging response - don't need to send this part to user
+
         return {
           ...user,
           id: user.id.toString(),
