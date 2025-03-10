@@ -4,6 +4,15 @@ import { GraphQLResolveInfo } from 'graphql';
 import { resolvers } from '../resolvers';
 import { Role, Resolver } from '../generated-types';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+require('dotenv').config();
+
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      JWT_SECRET: string;
+    }
+  }
+}
 
 function getCallableResolver<TResult, TParent, TContext, TArgs>(
   resolver: Resolver<TResult, TParent, TContext, TArgs>
@@ -76,6 +85,25 @@ const mockContext: TMockContext = (custom) => ({
   ...custom,
 });
 
+export const verificationMock = jest.fn().mockResolvedValue({
+  sid: 'FAKE_SID',
+  status: 'pending',
+});
+
+jest.mock('twilio', () => {
+  return jest.fn(() => ({
+    verify: {
+      v2: {
+        services: jest.fn(() => ({
+          verifications: {
+            create: verificationMock,
+          },
+        })),
+      },
+    },
+  }));
+});
+
 describe('resolvers', () => {
   beforeAll(() => {
     process.env.JWT_SECRET = 'your-secret-for-testing';
@@ -127,6 +155,9 @@ describe('resolvers', () => {
   });
   describe('Mutation', () => {
     describe('createUser', () => {
+      beforeEach(() => {
+        jest.resetModules();
+      });
       it('should create a user', async () => {
         (mockPrisma.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
         // Get the callable createUser resolver

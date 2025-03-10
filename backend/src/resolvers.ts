@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import zxcvbn from 'zxcvbn';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-
+require('dotenv').config();
 import {
   sendVerificationCode,
   checkVerificationCode,
