@@ -14,6 +14,8 @@ declare global {
       TWILIO_AUTH_TOKEN: string;
       TEST_PHONE_NUMBER: string;
       TWILIO_SERVICES_SID: string;
+      DATABASE_URL: string;
+      REDIS_URL: string;
     }
   }
 }
@@ -55,8 +57,7 @@ async function checkVerificationCode({
       code,
       to: phoneNumber,
     });
-
-  console.log(verificationCheck.status);
+  return verificationCheck.status;
 }
 
 export { sendVerificationCode, checkVerificationCode };

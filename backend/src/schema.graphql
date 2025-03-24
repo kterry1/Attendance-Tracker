@@ -17,8 +17,18 @@ type Query {
 
 type Mutation {
   "Create a new user"
-  createUser(name: String!, password: String!, roles: [Role!]!): User!
-    @auth(roles: [ADMIN])
+  createUser(
+    name: String!
+    password: String!
+    phoneNumber: String!
+    roles: [Role!]!
+  ): User! @auth(roles: [ADMIN])
+  "Verify a user's phone number"
+  verifyPhoneNumber(
+    username: String!
+    phoneNumber: String!
+    verificationCode: String!
+  ): VerifiedUserResponse!
   "Login a user"
   login(username: String!, password: String!): LoginResponse!
 }
@@ -28,6 +38,10 @@ type User {
   id: ID!
   "The user's name"
   name: String!
+  "The user's phone number"
+  phoneNumber: String!
+  "Verified phone number status"
+  verified: Boolean!
   "A list of roles for the user (e.g. student, instructor, admin)"
   roles: [Role!]!
   "Created at timestamp"
@@ -39,4 +53,13 @@ type User {
 type LoginResponse {
   "JWT token for authentication"
   token: String!
+}
+
+type VerifiedUserResponse {
+  "Verified user's name"
+  name: String!
+  "Verified user's phone number"
+  phoneNumber: String!
+  "Verified user's verified status"
+  verified: Boolean!
 }

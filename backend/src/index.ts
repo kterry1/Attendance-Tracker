@@ -10,6 +10,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { resolvers } from './resolvers';
 import { rateLimit } from './redis/rate-limit';
 import authDirectiveTransformer from './authentication-directive';
+require('dotenv').config();
 
 const typeDefs = gql(
   readFileSync(path.resolve(__dirname, 'schema.graphql'), {
