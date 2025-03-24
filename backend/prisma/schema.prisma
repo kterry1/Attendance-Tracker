@@ -25,7 +25,9 @@ model UserRole {
 model User {
   id    Int     @id @default(autoincrement())
   name  String  @unique
+  phoneNumber String @unique
   password String // This field is stored in the database but not exposed via GraphQL.
+  verified Boolean @default(false) // Indicates if the user has verified their phone number
   roles UserRole[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()

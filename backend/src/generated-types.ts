@@ -48,17 +48,26 @@ export type Mutation = {
   createUser: User;
   /** Login a user */
   login: LoginResponse;
+  /** Verify a user's phone number */
+  verifyPhoneNumber: VerifiedUserResponse;
 };
 
 export type MutationCreateUserArgs = {
   name: Scalars['String']['input'];
   password: Scalars['String']['input'];
+  phoneNumber: Scalars['String']['input'];
   roles: Array<Role>;
 };
 
 export type MutationLoginArgs = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
+};
+
+export type MutationVerifyPhoneNumberArgs = {
+  phoneNumber: Scalars['String']['input'];
+  username: Scalars['String']['input'];
+  verificationCode: Scalars['String']['input'];
 };
 
 export type Query = {
@@ -83,10 +92,21 @@ export type User = {
   id: Scalars['ID']['output'];
   /** The user's name */
   name: Scalars['String']['output'];
+  /** The user's phone number */
+  phoneNumber: Scalars['String']['output'];
   /** A list of roles for the user (e.g. student, instructor, admin) */
   roles: Array<Role>;
   /** Updated at timestamp */
   updatedAt: Scalars['Date']['output'];
+  /** Verified phone number status */
+  verified: Scalars['Boolean']['output'];
+};
+
+export type VerifiedUserResponse = {
+  __typename?: 'VerifiedUserResponse';
+  name: Scalars['String']['output'];
+  phoneNumber: Scalars['String']['output'];
+  verified: Scalars['Boolean']['output'];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -205,6 +225,7 @@ export type ResolversTypes = {
   Role: Role;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   User: ResolverTypeWrapper<User>;
+  VerifiedUserResponse: ResolverTypeWrapper<VerifiedUserResponse>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -217,6 +238,7 @@ export type ResolversParentTypes = {
   Query: {};
   String: Scalars['String']['output'];
   User: User;
+  VerifiedUserResponse: VerifiedUserResponse;
 };
 
 export type AuthDirectiveArgs = {
@@ -253,13 +275,25 @@ export type MutationResolvers<
     ResolversTypes['User'],
     ParentType,
     ContextType,
-    RequireFields<MutationCreateUserArgs, 'name' | 'password' | 'roles'>
+    RequireFields<
+      MutationCreateUserArgs,
+      'name' | 'password' | 'phoneNumber' | 'roles'
+    >
   >;
   login?: Resolver<
     ResolversTypes['LoginResponse'],
     ParentType,
     ContextType,
     RequireFields<MutationLoginArgs, 'password' | 'username'>
+  >;
+  verifyPhoneNumber?: Resolver<
+    ResolversTypes['VerifiedUserResponse'],
+    ParentType,
+    ContextType,
+    RequireFields<
+      MutationVerifyPhoneNumberArgs,
+      'phoneNumber' | 'username' | 'verificationCode'
+    >
   >;
 };
 
@@ -280,8 +314,21 @@ export type UserResolvers<
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  phoneNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['Role']>, ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  verified?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type VerifiedUserResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['VerifiedUserResponse'] = ResolversParentTypes['VerifiedUserResponse'],
+> = {
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  phoneNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  verified?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -291,6 +338,7 @@ export type Resolvers<ContextType = any> = {
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
+  VerifiedUserResponse?: VerifiedUserResponseResolvers<ContextType>;
 };
 
 export type DirectiveResolvers<ContextType = any> = {

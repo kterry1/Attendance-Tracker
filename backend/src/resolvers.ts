@@ -9,7 +9,13 @@ import {
   sendVerificationCode,
   checkVerificationCode,
 } from './helper-functions';
-import { Resolvers, User, Role, LoginResponse } from './generated-types';
+import {
+  Resolvers,
+  User,
+  Role,
+  LoginResponse,
+  VerifiedUserResponse,
+} from './generated-types';
 type UserRole = {
   id: number;
   role: Role;
@@ -87,8 +93,9 @@ export const resolvers: Resolvers<{
       {
         name,
         password,
+        phoneNumber,
         roles,
-      }: { name: string; password: string; roles: Role[] },
+      }: { name: string; password: string; phoneNumber: string; roles: Role[] },
       context
     ): Promise<User> => {
       const existingUser = await context.prisma.user.findUnique({
@@ -119,6 +126,7 @@ export const resolvers: Resolvers<{
           data: {
             name,
             password: hashedPassword,
+            phoneNumber,
             roles: {
               create: uniqueRoles.map((role) => ({ role })),
             },
@@ -126,14 +134,15 @@ export const resolvers: Resolvers<{
           select: {
             id: true,
             name: true,
+            phoneNumber: true,
+            verified: true,
             roles: true,
             createdAt: true,
             updatedAt: true,
           },
         });
 
-        await sendVerificationCode(); // NOTE: currently only console.logging response - don't need to send this part to user
-
+        const codeResponse = await sendVerificationCode(phoneNumber);
         return {
           ...user,
           id: user.id.toString(),
@@ -148,6 +157,59 @@ export const resolvers: Resolvers<{
         }
         throw error;
       }
+    },
+    verifyPhoneNumber: async (
+      parent,
+      {
+        username,
+        phoneNumber,
+        verificationCode,
+      }: { username: string; phoneNumber: string; verificationCode: string },
+      context
+    ): Promise<VerifiedUserResponse> => {
+      const user = await context.prisma.user.findUnique({
+        where: {
+          name: username,
+        },
+      });
+
+      if (!user) {
+        throw new GraphQLError('User and/or phone number incorrect', {
+          extensions: { code: 'USER_NOT_FOUND' },
+        });
+      }
+
+      if (user.phoneNumber !== phoneNumber) {
+        throw new GraphQLError('User and/or phone number incorrect', {
+          extensions: { code: 'USER_NOT_FOUND' },
+        });
+      }
+
+      const confirmVerification = await checkVerificationCode({
+        code: verificationCode,
+        phoneNumber,
+      });
+      console.log({ confirmVerification });
+      if (confirmVerification !== 'approved') {
+        throw new GraphQLError('Verification code is incorrect', {
+          extensions: { code: 'INVALID_VERIFICATION_CODE' },
+        });
+      }
+      const updatedUser = await context.prisma.user.update({
+        where: { id: user.id },
+        data: { verified: true },
+      });
+      if (!updatedUser) {
+        throw new GraphQLError('Error verifying phone number', {
+          extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
+        });
+      }
+      const { name, phoneNumber: number, verified } = updatedUser;
+      return {
+        name,
+        phoneNumber: number,
+        verified,
+      };
     },
     login: async (
       parent,

@@ -53,22 +53,26 @@ const mockPrisma = {
       {
         id: 1,
         name: 'Greg Hirsch',
+        phoneNumber: '+1234567890',
         roles: [{ role: Role.Admin }],
       },
       {
         id: 2,
         name: 'Tom Wambsgans',
+        phoneNumber: '+1234567899',
         roles: [{ role: Role.Student }],
       },
     ]),
     findUnique: jest.fn().mockResolvedValue({
       id: 1,
       name: 'Greg Hirsch',
+      phoneNumber: '+1234567890',
       roles: [{ role: Role.Admin }],
     }),
     create: jest.fn().mockResolvedValue({
       id: 1,
       name: 'Greg Hirsch',
+      phoneNumber: '+1234567890',
       roles: [{ role: Role.Admin }],
     }),
   },
@@ -118,11 +122,13 @@ describe('resolvers', () => {
           {
             id: '1',
             name: 'Greg Hirsch',
+            phoneNumber: '+1234567890',
             roles: [Role.Admin],
           },
           {
             id: '2',
             name: 'Tom Wambsgans',
+            phoneNumber: '+1234567899',
             roles: [Role.Student],
           },
         ]);
@@ -137,6 +143,7 @@ describe('resolvers', () => {
         expect(result).toEqual({
           id: '1',
           name: 'Greg Hirsch',
+          phoneNumber: '+1234567890',
           roles: [Role.Admin],
         });
       });
@@ -170,6 +177,7 @@ describe('resolvers', () => {
           {
             name: 'Greg Hirsch',
             password: 'this_13_A-pass_Crossword',
+            phoneNumber: '+1234567890',
             roles: [Role.Admin],
           },
           mockContext()
@@ -177,6 +185,7 @@ describe('resolvers', () => {
         expect(result).toEqual({
           id: '1',
           name: 'Greg Hirsch',
+          phoneNumber: '+1234567890',
           roles: [Role.Admin],
         });
       });
@@ -192,6 +201,7 @@ describe('resolvers', () => {
           {
             name: 'Greg Hirsch',
             password: 'too_easy',
+            phoneNumber: '+1234567890',
             roles: [Role.Admin],
           },
           mockContext()
@@ -214,7 +224,12 @@ describe('resolvers', () => {
 
         const result = createUserResolver(
           null,
-          { name: 'Greg Hirsch', password: 'password', roles: [Role.Admin] },
+          {
+            name: 'Greg Hirsch',
+            password: 'password',
+            phoneNumber: '+1234567890',
+            roles: [Role.Admin],
+          },
           mockContext()
         );
         expect(result).rejects.toThrow('User already exists');
