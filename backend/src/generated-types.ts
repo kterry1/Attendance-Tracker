@@ -42,12 +42,20 @@ export type LoginResponse = {
   token: Scalars['String']['output'];
 };
 
+export type LogoutResponse = {
+  __typename?: 'LogoutResponse';
+  message: Scalars['String']['output'];
+  /** Logout status */
+  success: Scalars['Boolean']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   /** Create a new user */
   createUser: User;
   /** Login a user */
   login: LoginResponse;
+  logout: LogoutResponse;
   /** Verify a user's phone number */
   verifyPhoneNumber: VerifiedUserResponse;
 };
@@ -90,6 +98,8 @@ export type User = {
   createdAt: Scalars['Date']['output'];
   /** The user's ID */
   id: Scalars['ID']['output'];
+  /** Last logout timestamp */
+  lastLogout?: Maybe<Scalars['Date']['output']>;
   /** The user's name */
   name: Scalars['String']['output'];
   /** The user's phone number */
@@ -104,8 +114,11 @@ export type User = {
 
 export type VerifiedUserResponse = {
   __typename?: 'VerifiedUserResponse';
+  /** Verified user's name */
   name: Scalars['String']['output'];
+  /** Verified user's phone number */
   phoneNumber: Scalars['String']['output'];
+  /** Verified user's verified status */
   verified: Scalars['Boolean']['output'];
 };
 
@@ -220,6 +233,7 @@ export type ResolversTypes = {
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
+  LogoutResponse: ResolverTypeWrapper<LogoutResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   Role: Role;
@@ -234,6 +248,7 @@ export type ResolversParentTypes = {
   Date: Scalars['Date']['output'];
   ID: Scalars['ID']['output'];
   LoginResponse: LoginResponse;
+  LogoutResponse: LogoutResponse;
   Mutation: {};
   Query: {};
   String: Scalars['String']['output'];
@@ -266,6 +281,16 @@ export type LoginResponseResolvers<
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type LogoutResponseResolvers<
+  ContextType = any,
+  ParentType extends
+    ResolversParentTypes['LogoutResponse'] = ResolversParentTypes['LogoutResponse'],
+> = {
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type MutationResolvers<
   ContextType = any,
   ParentType extends
@@ -286,6 +311,7 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationLoginArgs, 'password' | 'username'>
   >;
+  logout?: Resolver<ResolversTypes['LogoutResponse'], ParentType, ContextType>;
   verifyPhoneNumber?: Resolver<
     ResolversTypes['VerifiedUserResponse'],
     ParentType,
@@ -313,6 +339,7 @@ export type UserResolvers<
 > = {
   createdAt?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  lastLogout?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   phoneNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   roles?: Resolver<Array<ResolversTypes['Role']>, ParentType, ContextType>;
@@ -335,6 +362,7 @@ export type VerifiedUserResponseResolvers<
 export type Resolvers<ContextType = any> = {
   Date?: GraphQLScalarType;
   LoginResponse?: LoginResponseResolvers<ContextType>;
+  LogoutResponse?: LogoutResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;

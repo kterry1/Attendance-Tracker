@@ -31,6 +31,7 @@ type Mutation {
   ): VerifiedUserResponse!
   "Login a user"
   login(username: String!, password: String!): LoginResponse!
+  logout: LogoutResponse!
 }
 
 type User {
@@ -48,11 +49,19 @@ type User {
   createdAt: Date!
   "Updated at timestamp"
   updatedAt: Date!
+  "Last logout timestamp"
+  lastLogout: Date
 }
 
 type LoginResponse {
   "JWT token for authentication"
   token: String!
+}
+
+type LogoutResponse {
+  "Logout status"
+  success: Boolean!
+  message: String!
 }
 
 type VerifiedUserResponse {

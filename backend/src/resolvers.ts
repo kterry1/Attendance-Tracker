@@ -142,7 +142,7 @@ export const resolvers: Resolvers<{
           },
         });
 
-        const codeResponse = await sendVerificationCode(phoneNumber);
+        await sendVerificationCode(phoneNumber);
         return {
           ...user,
           id: user.id.toString(),
