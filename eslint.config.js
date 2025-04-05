@@ -4,7 +4,7 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 export default [
   {
     ignores: ['node_modules/**'], // Ignore specific files/folders
-    files: ['**/*.{js,jsx,ts,tsx}'], // Specify file extensions to lint
+    files: ['**/*.{ts,tsx}'], // Specify file extensions to lint
     languageOptions: {
       ecmaVersion: 'latest', // Use the latest ECMAScript version
       sourceType: 'module',
