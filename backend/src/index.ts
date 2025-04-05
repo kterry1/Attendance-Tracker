@@ -7,9 +7,10 @@ import { gql } from 'graphql-tag';
 import jwt from 'jsonwebtoken';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
-import { resolvers } from './resolvers';
+import { resolvers, ValidatedUser } from './resolvers';
 import { rateLimit } from './redis/rate-limit';
 import authDirectiveTransformer from './authentication-directive';
+import { GraphQLError } from 'graphql';
 require('dotenv').config();
 
 const typeDefs = gql(
@@ -30,7 +31,6 @@ const prisma = new PrismaClient({
 function extractToken(req: any, res: any) {
   // Check for token in the cookies first
   if (req.cookies?.token) {
-    console.log('cookie');
     return req.cookies.token;
   }
   // Fallback to checking the Authorization header
@@ -70,16 +70,49 @@ async function startApolloServers() {
       // Apply rate limiting (100 requests per minute per IP)
       await rateLimit(ip as string, 100, 60);
 
-      let validatedUser = null;
+      let validatedUser: ValidatedUser | null = null;
       const extractedToken = extractToken(req, res);
       if (extractedToken) {
         try {
           validatedUser = jwt.verify(
             extractedToken,
             process.env.JWT_SECRET as string
-          );
+          ) as ValidatedUser;
+
+          const tokenIssuedAt: Date = new Date(validatedUser.iat * 1000);
+
+          const dbUser = await prisma.user.findUnique({
+            where: { id: validatedUser.id },
+          });
+          if (tokenIssuedAt < dbUser?.lastLogout) {
+            res.clearCookie('token', {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+            });
+            throw new GraphQLError(
+              'Your session has expired. Please log in again.',
+              { extensions: { code: 'UNAUTHENTICATED' } }
+            );
+          }
         } catch (error) {
-          console.error('Error verifying token:', error);
+          // If the error is already a GraphQLError, rethrow it as is.
+          if (error instanceof GraphQLError) {
+            throw error;
+          }
+          if (error instanceof Error && error.name === 'TokenExpiredError') {
+            console.warn('Token has expired. Clearing token.');
+            // Clear expired token
+            res.clearCookie('token', {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === 'production',
+              sameSite: 'lax',
+            });
+          }
+          console.error('JWT verification error:', error);
+          throw new GraphQLError('Invalid authentication token.', {
+            extensions: { code: 'UNAUTHENTICATED' },
+          });
         }
       }
 

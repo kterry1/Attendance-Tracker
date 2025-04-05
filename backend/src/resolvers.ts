@@ -2,7 +2,7 @@ import { GraphQLScalarType, Kind, GraphQLError } from 'graphql';
 import { ApolloServerErrorCode } from '@apollo/server/errors';
 import { PrismaClient } from '@prisma/client';
 import zxcvbn from 'zxcvbn';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 require('dotenv').config();
 import {
@@ -15,6 +15,7 @@ import {
   Role,
   LoginResponse,
   VerifiedUserResponse,
+  LogoutResponse,
 } from './generated-types';
 type UserRole = {
   id: number;
@@ -23,14 +24,16 @@ type UserRole = {
   userId: number;
 };
 
-type validatedUser = {
+export interface ValidatedUser extends JwtPayload {
   id: number;
   roles: Role[];
-};
+  iat: number;
+  esp: number;
+}
 
 export const resolvers: Resolvers<{
   prisma: PrismaClient;
-  validatedUser: validatedUser;
+  validatedUser: ValidatedUser;
   res: any;
   req: any;
 }> = {
@@ -179,7 +182,7 @@ export const resolvers: Resolvers<{
         });
       }
 
-      if (user.phoneNumber !== phoneNumber) {
+      if (user?.phoneNumber !== phoneNumber) {
         throw new GraphQLError('User and/or phone number incorrect', {
           extensions: { code: 'USER_NOT_FOUND' },
         });
@@ -224,6 +227,7 @@ export const resolvers: Resolvers<{
           id: true,
           password: true,
           roles: true,
+          lastLogout: true,
         },
       });
 
@@ -243,7 +247,10 @@ export const resolvers: Resolvers<{
 
       // Create a JWT token. The payload includes user id
       const token = jwt.sign(
-        { id: user.id, roles: user.roles.map((role: UserRole) => role.role) },
+        {
+          id: user.id,
+          roles: user.roles.map((role: UserRole) => role.role),
+        },
         process.env.JWT_SECRET,
         {
           expiresIn: '1h',
@@ -262,6 +269,38 @@ export const resolvers: Resolvers<{
       return {
         token,
       };
+    },
+    logout: async (parent, args, context): Promise<LogoutResponse> => {
+      if (!context.validatedUser) {
+        throw new GraphQLError('You are not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      try {
+        context.res.clearCookie('token', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production', // secure in production
+          sameSite: 'lax',
+        });
+
+        await context.prisma.user.update({
+          where: {
+            id: context.validatedUser.id,
+          },
+          data: { lastLogout: new Date() },
+        });
+
+        return {
+          success: true,
+          message: 'Successfully logged out.',
+        };
+      } catch (error) {
+        console.error('Logout error:', error);
+        return {
+          success: false,
+          message: 'Logout failed. Please try again.',
+        };
+      }
     },
   },
 };
