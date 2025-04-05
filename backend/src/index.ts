@@ -84,7 +84,7 @@ async function startApolloServers() {
           const dbUser = await prisma.user.findUnique({
             where: { id: validatedUser.id },
           });
-          if (tokenIssuedAt < dbUser?.lastLogout) {
+          if (!dbUser || tokenIssuedAt < dbUser?.lastLogout) {
             res.clearCookie('token', {
               httpOnly: true,
               secure: process.env.NODE_ENV === 'production',
