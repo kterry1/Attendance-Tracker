@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 import { GraphQLResolveInfo } from 'graphql';
-import { resolvers } from '../resolvers';
+import { resolvers, ValidatedUser } from '../resolvers';
 import { Role, Resolver } from '../generated-types';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 require('dotenv').config();
@@ -32,7 +32,7 @@ function getCallableResolver<TResult, TParent, TContext, TArgs>(
 
 type TMockContext = (custom?: any) => {
   prisma: PrismaClient;
-  validatedUser: { id: number; roles: Array<Role> };
+  validatedUser: ValidatedUser;
   res: any;
   req: Response;
   custom: any;

@@ -28,7 +28,7 @@ export interface ValidatedUser extends JwtPayload {
   id: number;
   roles: Role[];
   iat: number;
-  esp: number;
+  exp: number;
 }
 
 export const resolvers: Resolvers<{
